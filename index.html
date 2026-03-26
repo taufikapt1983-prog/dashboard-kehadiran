@@ -199,7 +199,7 @@ function renderTable(){
 
   let totalPages = Math.ceil(filtered.length / rowsPerPage);
 
-  // 🔥 JAGA PAGE AGAR VALID
+  // 🔥 VALIDASI HALAMAN
   if(currentPage > totalPages) currentPage = totalPages || 1;
   if(currentPage < 1) currentPage = 1;
 
@@ -228,7 +228,7 @@ function renderTable(){
   renderPagination(filtered.length);
 }
 
-// 🔥 PAGINATION FIX FINAL
+// 🔥 PAGINATION
 function renderPagination(total){
 
   let totalPages = Math.ceil(total / rowsPerPage);
@@ -241,7 +241,7 @@ function renderPagination(total){
 
   // PREV
   html += `
-    <button onclick="changePage(${currentPage-1})" 
+    <button onclick="changePage(${currentPage-1})"
     ${currentPage === 1 ? 'disabled' : ''}>
     ←
     </button>
@@ -285,10 +285,16 @@ function renderPagination(total){
   document.getElementById("pagination").innerHTML = html;
 }
 
-// 🔥 CHANGE PAGE (FIX)
+// 🔥 FIX UTAMA ADA DI SINI
 function changePage(p){
 
-  let totalPages = Math.ceil(allData.length / rowsPerPage);
+  let keyword = document.getElementById("search").value.toLowerCase();
+
+  let filtered = allData.filter(x => 
+    x.nama.toLowerCase().includes(keyword)
+  );
+
+  let totalPages = Math.ceil(filtered.length / rowsPerPage);
 
   if(p < 1 || p > totalPages) return;
 
@@ -320,6 +326,6 @@ function renderChart(hadir, tidak){
   });
 }
 </script>
-
+  
 </body>
 </html>
