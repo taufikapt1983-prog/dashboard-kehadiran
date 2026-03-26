@@ -161,7 +161,7 @@ const rowsPerPage = 10;
 let allData = [];
 let chart;
 
-// 🔥 LOAD DATA DARI API
+// 🔥 LOAD DATA
 fetch(API)
 .then(res => res.json())
 .then(res => {
@@ -190,11 +190,18 @@ fetch(API)
 
 // 🔥 TABLE
 function renderTable(){
+
   let keyword = document.getElementById("search").value.toLowerCase();
 
   let filtered = allData.filter(x => 
     x.nama.toLowerCase().includes(keyword)
   );
+
+  let totalPages = Math.ceil(filtered.length / rowsPerPage);
+
+  // 🔥 JAGA PAGE AGAR VALID
+  if(currentPage > totalPages) currentPage = totalPages || 1;
+  if(currentPage < 1) currentPage = 1;
 
   let start = (currentPage - 1) * rowsPerPage;
   let paginatedData = filtered.slice(start, start + rowsPerPage);
@@ -221,8 +228,9 @@ function renderTable(){
   renderPagination(filtered.length);
 }
 
-// 🔥 PAGINATION
+// 🔥 PAGINATION FIX FINAL
 function renderPagination(total){
+
   let totalPages = Math.ceil(total / rowsPerPage);
   let html = "";
 
@@ -231,47 +239,63 @@ function renderPagination(total){
     return;
   }
 
-  // 🔹 tombol PREV
-  if(currentPage > 1){
-    html += `<button onclick="changePage(${currentPage-1})">←</button>`;
-  }
+  // PREV
+  html += `
+    <button onclick="changePage(${currentPage-1})" 
+    ${currentPage === 1 ? 'disabled' : ''}>
+    ←
+    </button>
+  `;
 
   let start = Math.max(1, currentPage - 2);
   let end = Math.min(totalPages, currentPage + 2);
 
-  // 🔹 jika awal bukan 1
   if(start > 1){
     html += `<button onclick="changePage(1)">1</button>`;
     if(start > 2){
-      html += `<span style="margin:0 5px;">...</span>`;
+      html += `<span>...</span>`;
     }
   }
 
-  // 🔹 halaman utama (maks 5)
   for(let i = start; i <= end; i++){
-  html += `
-    <button 
-      onclick="changePage(${i})"
-      class="${i === currentPage ? 'active' : ''}">
-      ${i}
-    </button>
-  `;
-}
+    html += `
+      <button 
+        onclick="changePage(${i})"
+        class="${i === currentPage ? 'active' : ''}">
+        ${i}
+      </button>
+    `;
+  }
 
-  // 🔹 jika akhir belum terakhir
   if(end < totalPages){
     if(end < totalPages - 1){
-      html += `<span style="margin:0 5px;">...</span>`;
+      html += `<span>...</span>`;
     }
     html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
   }
 
-  // 🔹 tombol NEXT
-  if(currentPage < totalPages){
-    html += `<button onclick="changePage(${currentPage+1})">→</button>`;
-  }
+  // NEXT
+  html += `
+    <button onclick="changePage(${currentPage+1})"
+    ${currentPage === totalPages ? 'disabled' : ''}>
+    →
+    </button>
+  `;
 
   document.getElementById("pagination").innerHTML = html;
+}
+
+// 🔥 CHANGE PAGE (FIX)
+function changePage(p){
+
+  let totalPages = Math.ceil(allData.length / rowsPerPage);
+
+  if(p < 1 || p > totalPages) return;
+
+  currentPage = p;
+  renderTable();
+
+  window.scrollTo({ top: 400, behavior: "smooth" });
 }
 
 // 🔥 SEARCH
@@ -293,16 +317,6 @@ function renderChart(hadir, tidak){
         backgroundColor: ['#198754','#dc3545']
       }]
     }
-  });
-}
-
-function changePage(p){
-  currentPage = p;
-  renderTable();
-
-  // 🔥 auto scroll ke atas tabel (opsional tapi bagus)
-  document.getElementById("data").scrollIntoView({
-    behavior: "smooth"
   });
 }
 </script>
