@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+  font-family:'Segoe UI';
+  margin:0;
+  background:#f4f6f9;
+}
+
+.header{
+  background:linear-gradient(135deg,#0d6efd,#0dcaf0);
+  color:white;
+  padding:20px;
+  border-radius:0 0 20px 20px;
+  text-align:center;
+}
+
+.card{
+  background:white;
+  margin:15px;
+  padding:15px;
+  border-radius:15px;
+  box-shadow:0 5px 15px rgba(0,0,0,0.1);
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+.stat{
+  background:#f1f3f5;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+}
+
+canvas{
+  max-width:250px;
+  margin:auto;
+}
+
+input{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-bottom:10px;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+button{
+  margin:2px;
+  padding:5px 10px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  background:#e9ecef;
+}
+
+button:hover{
+  background:#0d6efd;
+  color:white;
+}
+
+th{
+  background:#0d6efd;
+  color:white;
+  padding:10px;
+}
+
+td{
+  padding:8px;
+  border-bottom:1px solid #ddd;
+}
+
+/* Tengah */
+td:nth-child(1),
+td:nth-child(3),
+th:nth-child(1),
+th:nth-child(3){
+  text-align:center;
+}
+
+.status-hadir{ color:#198754; font-weight:bold; }
+.status-tidak{ color:#dc3545; font-weight:bold; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <img src="https://i.ibb.co.com/5WWKSY0Z/Logo-IAI-Grobogan-b.png" 
+       style="width:70px; margin-bottom:10px;">
+  <h2>📊 Dashboard Kehadiran</h2>
+</div>
+
+<div class="card">
+  <div class="stats">
+    <div class="stat">Total<br><b id="total">0</b></div>
+    <div class="stat">Hadir<br><b id="hadir">0</b></div>
+    <div class="stat">Tidak Hadir<br><b id="tidak">0</b></div>
+    <div class="stat">Persen<br><b id="persen">0%</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <canvas id="chartKehadiran"></canvas>
+</div>
+
+<div class="card">
+  <input type="text" id="search" placeholder="🔍 Cari nama...">
+
+  <table>
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Nama</th>
+        <th>Kehadiran</th>
+      </tr>
+    </thead>
+    <tbody id="data"></tbody>
+  </table>
+
+  <div id="pagination" style="text-align:center; margin-top:10px;"></div>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwrG9e4hirDV97y0ZEVJHv-yYtt14g4eaYUqOZ_3wj4uV9I4eo6pDfmrf0AGhi_ZiJrJw/exec";
+
+let currentPage = 1;
+const rowsPerPage = 10;
+let allData = [];
+let chart;
+
+// 🔥 LOAD DATA DARI API
+fetch(API)
+.then(res => res.json())
+.then(res => {
+
+  allData = res.data;
+
+  let s = res.summary;
+
+  document.getElementById("total").innerText = s.total;
+  document.getElementById("hadir").innerText = s.hadir;
+  document.getElementById("tidak").innerText = s.tidak;
+  document.getElementById("persen").innerText = s.persen+"%";
+
+  renderChart(s.hadir, s.tidak);
+  renderTable();
+});
+
+// 🔥 TABLE
+function renderTable(){
+  let keyword = document.getElementById("search").value.toLowerCase();
+
+  let filtered = allData.filter(x => 
+    x.nama.toLowerCase().includes(keyword)
+  );
+
+  let start = (currentPage - 1) * rowsPerPage;
+  let paginatedData = filtered.slice(start, start + rowsPerPage);
+
+  let html = "";
+
+  if(paginatedData.length === 0){
+    html = "<tr><td colspan='3'>Data tidak ditemukan</td></tr>";
+  } else {
+    paginatedData.forEach((d,i)=>{
+      html += `
+        <tr>
+          <td>${start + i + 1}</td>
+          <td>${d.nama}</td>
+          <td class="${d.kehadiran==='Hadir'?'status-hadir':'status-tidak'}">
+            ${d.kehadiran}
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  document.getElementById("data").innerHTML = html;
+  renderPagination(filtered.length);
+}
+
+// 🔥 PAGINATION
+function renderPagination(total){
+  let totalPages = Math.ceil(total / rowsPerPage);
+  let html = "";
+
+  for(let i=1;i<=totalPages;i++){
+    html += `<button onclick="changePage(${i})">${i}</button>`;
+  }
+
+  document.getElementById("pagination").innerHTML = html;
+}
+
+function changePage(p){
+  currentPage = p;
+  renderTable();
+}
+
+// 🔥 SEARCH
+document.getElementById("search").addEventListener("input", ()=>{
+  currentPage = 1;
+  renderTable();
+});
+
+// 🔥 CHART
+function renderChart(hadir, tidak){
+  const ctx = document.getElementById('chartKehadiran');
+
+  chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Hadir','Tidak Hadir'],
+      datasets: [{
+        data: [hadir, tidak],
+        backgroundColor: ['#198754','#dc3545']
+      }]
+    }
+  });
+}
+</script>
+
+</body>
+</html>
