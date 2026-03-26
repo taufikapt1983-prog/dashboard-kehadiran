@@ -137,7 +137,20 @@ th:nth-child(3){
 </div>
 
 <div class="card">
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+
   <input type="text" id="search" placeholder="🔍 Cari nama...">
+
+  <select id="filterStatus">
+    <option value="">Semua</option>
+    <option value="Hadir">Hadir</option>
+    <option value="Tidak Hadir">Tidak Hadir</option>
+  </select>
+
+  <button onclick="exportExcel()">📥 Excel</button>
+  <button onclick="exportPDF()">📄 PDF</button>
+
+</div>
 
   <table>
     <thead>
@@ -161,45 +174,55 @@ const rowsPerPage = 10;
 let allData = [];
 let chart;
 
-// 🔥 LOAD DATA
-fetch(API)
-.then(res => res.json())
-.then(res => {
+// 🔥 LOAD DATA AWAL
+function loadData(){
+  fetch(API)
+  .then(res => res.json())
+  .then(res => {
 
-  if(!res || !res.data){
-    throw new Error("Data kosong");
-  }
+    if(!res || !res.data){
+      throw new Error("Data kosong");
+    }
 
-  allData = res.data;
+    allData = res.data;
 
-  let s = res.summary;
+    let s = res.summary;
 
-  document.getElementById("total").innerText = s.total;
-  document.getElementById("hadir").innerText = s.hadir;
-  document.getElementById("tidak").innerText = s.tidak;
-  document.getElementById("persen").innerText = s.persen+"%";
+    document.getElementById("total").innerText = s.total;
+    document.getElementById("hadir").innerText = s.hadir;
+    document.getElementById("tidak").innerText = s.tidak;
+    document.getElementById("persen").innerText = s.persen+"%";
 
-  renderChart(s.hadir, s.tidak);
-  renderTable();
-})
-.catch(err => {
-  document.getElementById("data").innerHTML =
-    "<tr><td colspan='3'>Gagal load data ❌</td></tr>";
-  console.error(err);
-});
+    renderChart(s.hadir, s.tidak);
+    renderTable();
+
+  })
+  .catch(err => {
+    document.getElementById("data").innerHTML =
+      "<tr><td colspan='3'>Gagal load data ❌</td></tr>";
+    console.error(err);
+  });
+}
+
+// 🔥 AUTO REFRESH (REALTIME)
+setInterval(() => {
+  loadData();
+}, 10000); // 10 detik
 
 // 🔥 TABLE
 function renderTable(){
 
   let keyword = document.getElementById("search").value.toLowerCase();
+  let statusFilter = document.getElementById("filterStatus").value;
 
-  let filtered = allData.filter(x => 
-    x.nama.toLowerCase().includes(keyword)
-  );
+  let filtered = allData.filter(x => {
+    let cocokNama = x.nama.toLowerCase().includes(keyword);
+    let cocokStatus = statusFilter ? x.kehadiran === statusFilter : true;
+    return cocokNama && cocokStatus;
+  });
 
   let totalPages = Math.ceil(filtered.length / rowsPerPage);
 
-  // 🔥 VALIDASI HALAMAN
   if(currentPage > totalPages) currentPage = totalPages || 1;
   if(currentPage < 1) currentPage = 1;
 
@@ -239,12 +262,9 @@ function renderPagination(total){
     return;
   }
 
-  // PREV
   html += `
     <button onclick="changePage(${currentPage-1})"
-    ${currentPage === 1 ? 'disabled' : ''}>
-    ←
-    </button>
+    ${currentPage === 1 ? 'disabled' : ''}>←</button>
   `;
 
   let start = Math.max(1, currentPage - 2);
@@ -274,25 +294,25 @@ function renderPagination(total){
     html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
   }
 
-  // NEXT
   html += `
     <button onclick="changePage(${currentPage+1})"
-    ${currentPage === totalPages ? 'disabled' : ''}>
-    →
-    </button>
+    ${currentPage === totalPages ? 'disabled' : ''}>→</button>
   `;
 
   document.getElementById("pagination").innerHTML = html;
 }
 
-// 🔥 FIX UTAMA ADA DI SINI
+// 🔥 CHANGE PAGE (FIX FINAL)
 function changePage(p){
 
   let keyword = document.getElementById("search").value.toLowerCase();
+  let statusFilter = document.getElementById("filterStatus").value;
 
-  let filtered = allData.filter(x => 
-    x.nama.toLowerCase().includes(keyword)
-  );
+  let filtered = allData.filter(x => {
+    let cocokNama = x.nama.toLowerCase().includes(keyword);
+    let cocokStatus = statusFilter ? x.kehadiran === statusFilter : true;
+    return cocokNama && cocokStatus;
+  });
 
   let totalPages = Math.ceil(filtered.length / rowsPerPage);
 
@@ -310,9 +330,17 @@ document.getElementById("search").addEventListener("input", ()=>{
   renderTable();
 });
 
+// 🔥 FILTER
+document.getElementById("filterStatus").addEventListener("change", ()=>{
+  currentPage = 1;
+  renderTable();
+});
+
 // 🔥 CHART
 function renderChart(hadir, tidak){
   const ctx = document.getElementById('chartKehadiran');
+
+  if(chart) chart.destroy();
 
   chart = new Chart(ctx, {
     type: 'doughnut',
@@ -325,6 +353,9 @@ function renderChart(hadir, tidak){
     }
   });
 }
+
+// 🔥 LOAD AWAL
+loadData();
 </script>
   
 </body>
