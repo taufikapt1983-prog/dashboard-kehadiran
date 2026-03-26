@@ -147,6 +147,10 @@ fetch(API)
 .then(res => res.json())
 .then(res => {
 
+  if(!res || !res.data){
+    throw new Error("Data kosong");
+  }
+
   allData = res.data;
 
   let s = res.summary;
@@ -158,6 +162,11 @@ fetch(API)
 
   renderChart(s.hadir, s.tidak);
   renderTable();
+})
+.catch(err => {
+  document.getElementById("data").innerHTML =
+    "<tr><td colspan='3'>Gagal load data ❌</td></tr>";
+  console.error(err);
 });
 
 // 🔥 TABLE
