@@ -58,6 +58,14 @@ table{
   border-collapse:collapse;
 }
 
+#pagination button{
+  min-width:32px;
+}
+
+#pagination span{
+  font-weight:bold;
+}
+
 button{
   margin:2px;
   padding:5px 10px;
@@ -207,16 +215,56 @@ function renderPagination(total){
   let totalPages = Math.ceil(total / rowsPerPage);
   let html = "";
 
-  for(let i=1;i<=totalPages;i++){
-    html += `<button onclick="changePage(${i})">${i}</button>`;
+  if(totalPages <= 1){
+    document.getElementById("pagination").innerHTML = "";
+    return;
+  }
+
+  // 🔹 tombol PREV
+  if(currentPage > 1){
+    html += `<button onclick="changePage(${currentPage-1})">←</button>`;
+  }
+
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, currentPage + 2);
+
+  // 🔹 jika awal bukan 1
+  if(start > 1){
+    html += `<button onclick="changePage(1)">1</button>`;
+    if(start > 2){
+      html += `<span style="margin:0 5px;">...</span>`;
+    }
+  }
+
+  // 🔹 halaman utama (maks 5)
+  for(let i = start; i <= end; i++){
+    html += `
+      <button 
+        onclick="changePage(${i})"
+        style="${
+          i === currentPage 
+          ? 'background:#0d6efd;color:white;font-weight:bold;' 
+          : ''
+        }">
+        ${i}
+      </button>
+    `;
+  }
+
+  // 🔹 jika akhir belum terakhir
+  if(end < totalPages){
+    if(end < totalPages - 1){
+      html += `<span style="margin:0 5px;">...</span>`;
+    }
+    html += `<button onclick="changePage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // 🔹 tombol NEXT
+  if(currentPage < totalPages){
+    html += `<button onclick="changePage(${currentPage+1})">→</button>`;
   }
 
   document.getElementById("pagination").innerHTML = html;
-}
-
-function changePage(p){
-  currentPage = p;
-  renderTable();
 }
 
 // 🔥 SEARCH
