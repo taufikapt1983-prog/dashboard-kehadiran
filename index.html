@@ -403,20 +403,32 @@ function exportExcel(){
     return cocokNama && cocokStatus;
   });
 
-  // 🔥 INI KUNCI UTAMA
-  let csv = "sep=;\n";
-
-  csv += "No;Nama;Kehadiran\n";
+  let html = `
+    <table border="1">
+      <tr>
+        <th>No</th>
+        <th>Nama</th>
+        <th>Kehadiran</th>
+      </tr>
+  `;
 
   filtered.forEach((d,i)=>{
-    csv += `${i+1};${d.nama};${d.kehadiran}\n`;
+    html += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${d.nama}</td>
+        <td>${d.kehadiran}</td>
+      </tr>
+    `;
   });
 
-  let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  html += `</table>`;
+
+  let blob = new Blob([html], { type: 'application/vnd.ms-excel' });
 
   let link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "data_kehadiran.csv"; // 🔥 pakai CSV saja
+  link.download = "data_kehadiran.xls";
   link.click();
 }
 
