@@ -3,7 +3,8 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
 <style>
 body{
   font-family:'Segoe UI';
@@ -356,6 +357,47 @@ function renderChart(hadir, tidak){
 
 // 🔥 LOAD AWAL
 loadData();
+
+function exportExcel(){
+
+  let keyword = document.getElementById("search").value.toLowerCase();
+  let statusFilter = document.getElementById("filterStatus").value;
+
+  let filtered = allData.filter(x => {
+    let cocokNama = x.nama.toLowerCase().includes(keyword);
+    let cocokStatus = statusFilter ? x.kehadiran === statusFilter : true;
+    return cocokNama && cocokStatus;
+  });
+
+  let csv = "No,Nama,Kehadiran\n";
+
+  filtered.forEach((d,i)=>{
+    csv += `${i+1},${d.nama},${d.kehadiran}\n`;
+  });
+
+  let blob = new Blob([csv], { type: 'text/csv' });
+  let url = window.URL.createObjectURL(blob);
+
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = "data_kehadiran.csv";
+  a.click();
+}
+
+function exportPDF(){
+
+  const element = document.querySelector(".card:last-child");
+
+  html2pdf()
+    .set({
+      margin: 5,
+      filename: 'laporan_kehadiran.pdf',
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    })
+    .from(element)
+    .save();
+}
 </script>
   
 </body>
