@@ -167,6 +167,37 @@ th:nth-child(3){
   <div id="pagination" style="text-align:center; margin-top:10px;"></div>
 </div>
 
+<div id="pdfContent" style="display:none; padding:20px; font-family:Arial;">
+
+  <h2 style="text-align:center;">
+    LAPORAN KEHADIRAN
+  </h2>
+
+  <p style="text-align:center;">
+    Dicetak: <span id="tanggalCetak"></span>
+  </p>
+
+  <hr>
+
+  <p><b>Total:</b> <span id="pdfTotal"></span></p>
+  <p><b>Hadir:</b> <span id="pdfHadir"></span></p>
+  <p><b>Tidak Hadir:</b> <span id="pdfTidak"></span></p>
+
+  <br>
+
+  <table border="1" cellspacing="0" cellpadding="5" width="100%">
+    <thead>
+      <tr>
+        <th>No</th>
+        <th>Nama</th>
+        <th>Kehadiran</th>
+      </tr>
+    </thead>
+    <tbody id="pdfTable"></tbody>
+  </table>
+
+</div>
+
 <script>
 const API = "https://script.google.com/macros/s/AKfycbxgZnE5DqeQdpdyxrax5qKtevRwvPL33WBVAYzJj_19rqXZyuvmrbzKVd9xn3zE4FiR/exec";
 
@@ -386,17 +417,59 @@ function exportExcel(){
 
 function exportPDF(){
 
-  const element = document.querySelector(".card:last-child");
+  let keyword = document.getElementById("search").value.toLowerCase();
+  let statusFilter = document.getElementById("filterStatus").value;
 
+  let filtered = allData.filter(x => {
+    let cocokNama = x.nama.toLowerCase().includes(keyword);
+    let cocokStatus = statusFilter ? x.kehadiran === statusFilter : true;
+    return cocokNama && cocokStatus;
+  });
+
+  // 🔥 isi tanggal
+  let now = new Date();
+  document.getElementById("tanggalCetak").innerText =
+    now.toLocaleDateString("id-ID");
+
+  // 🔥 isi summary
+  let hadir = filtered.filter(x => x.kehadiran === "Hadir").length;
+  let tidak = filtered.filter(x => x.kehadiran === "Tidak Hadir").length;
+
+  document.getElementById("pdfTotal").innerText = filtered.length;
+  document.getElementById("pdfHadir").innerText = hadir;
+  document.getElementById("pdfTidak").innerText = tidak;
+
+  // 🔥 isi tabel
+  let html = "";
+  filtered.forEach((d,i)=>{
+    html += `
+      <tr>
+        <td>${i+1}</td>
+        <td>${d.nama}</td>
+        <td>${d.kehadiran}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("pdfTable").innerHTML = html;
+
+  // 🔥 tampilkan sementara
+  let element = document.getElementById("pdfContent");
+  element.style.display = "block";
+
+  // 🔥 generate PDF
   html2pdf()
     .set({
-      margin: 5,
+      margin: 10,
       filename: 'laporan_kehadiran.pdf',
       html2canvas: { scale: 2 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     })
     .from(element)
-    .save();
+    .save()
+    .then(()=>{
+      element.style.display = "none";
+    });
 }
 </script>
   
