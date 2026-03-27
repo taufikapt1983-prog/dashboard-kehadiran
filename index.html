@@ -169,9 +169,12 @@ th:nth-child(3){
 
 <div id="pdfContent" style="display:none; padding:20px; font-family:Arial;">
 
-  <h2 style="text-align:center;">
-    LAPORAN KEHADIRAN
-  </h2>
+<h2 style="text-align:center; margin-bottom:0;">
+  IKATAN APOTEKER INDONESIA
+</h2>
+<h3 style="text-align:center; margin-top:5px;">
+  LAPORAN KEHADIRAN
+</h3>
 
   <p style="text-align:center;">
     Dicetak: <span id="tanggalCetak"></span>
@@ -185,7 +188,7 @@ th:nth-child(3){
 
   <br>
 
-  <table border="1" cellspacing="0" cellpadding="5" width="100%">
+  <table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse:collapse;">
     <thead>
       <tr>
         <th>No</th>
@@ -426,12 +429,12 @@ function exportPDF(){
     return cocokNama && cocokStatus;
   });
 
-  // 🔥 isi tanggal
+  // 🔥 tanggal
   let now = new Date();
   document.getElementById("tanggalCetak").innerText =
     now.toLocaleDateString("id-ID");
 
-  // 🔥 isi summary
+  // 🔥 summary
   let hadir = filtered.filter(x => x.kehadiran === "Hadir").length;
   let tidak = filtered.filter(x => x.kehadiran === "Tidak Hadir").length;
 
@@ -453,23 +456,28 @@ function exportPDF(){
 
   document.getElementById("pdfTable").innerHTML = html;
 
-  // 🔥 tampilkan sementara
   let element = document.getElementById("pdfContent");
+
+  // 🔥 tampilkan dulu
   element.style.display = "block";
 
-  // 🔥 generate PDF
-  html2pdf()
-    .set({
-      margin: 10,
-      filename: 'laporan_kehadiran.pdf',
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    })
-    .from(element)
-    .save()
-    .then(()=>{
-      element.style.display = "none";
-    });
+  // 🔥 FIX PENTING: kasih delay render
+  setTimeout(() => {
+
+    html2pdf()
+      .set({
+        margin: 10,
+        filename: 'laporan_kehadiran.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      })
+      .from(element)
+      .save()
+      .then(() => {
+        element.style.display = "none";
+      });
+
+  }, 500); // 🔥 ini kunci sukses
 }
 </script>
   
