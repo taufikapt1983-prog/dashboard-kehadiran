@@ -403,17 +403,20 @@ function exportExcel(){
     return cocokNama && cocokStatus;
   });
 
-  let csv = "No;Nama;Kehadiran\n"; // 🔥 pakai titik koma
+  // 🔥 INI KUNCI UTAMA
+  let csv = "sep=;\n";
+
+  csv += "No;Nama;Kehadiran\n";
 
   filtered.forEach((d,i)=>{
-    csv += `${i+1};${d.nama};${d.kehadiran}\n`; // 🔥 titik koma
+    csv += `${i+1};${d.nama};${d.kehadiran}\n`;
   });
 
-  let blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
-  let link = document.createElement("a");
+  let blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
 
+  let link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "data_kehadiran.xls";
+  link.download = "data_kehadiran.csv"; // 🔥 pakai CSV saja
   link.click();
 }
 
