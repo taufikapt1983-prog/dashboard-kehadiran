@@ -417,9 +417,7 @@ function exportExcel(){
       <tr>
         <td>${i+1}</td>
         <td>${d.nama}</td>
-        <td style="color:${d.kehadiran==='Hadir'?'green':'red'}">
-  ${d.kehadiran}
-</td>
+        <td style="color:${d.kehadiran==='Hadir'?'green':'red'}">${d.kehadiran}</td>
       </tr>
     `;
   });
