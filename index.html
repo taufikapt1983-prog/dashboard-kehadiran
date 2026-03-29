@@ -113,6 +113,21 @@ th:nth-child(3){
 
 .status-hadir{ color:#198754; font-weight:bold; }
 .status-tidak{ color:#dc3545; font-weight:bold; }
+
+@media print {
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+}
 </style>
 </head>
 
@@ -188,7 +203,7 @@ th:nth-child(3){
 
   <br>
 
-  <table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse:collapse;">
+  <table border="1" cellspacing="0" cellpadding="6" width="100%" style="border-collapse:collapse; page-break-inside:auto;">
     <thead>
       <tr>
         <th>No</th>
@@ -198,6 +213,12 @@ th:nth-child(3){
     </thead>
     <tbody id="pdfTable"></tbody>
   </table>
+  <div style="text-align:right; margin-top:20px;">
+  <p>Grobogan, <span id="tanggalCetak"></span></p>
+  <br><br><br>
+  <p><b>( Ketua Panitia )</b></p>
+    
+</div>
 
 </div>
 
@@ -406,9 +427,9 @@ function exportExcel(){
   let html = `
     <table border="1">
       <tr>
-        <th>No</th>
-        <th>Nama</th>
-        <th>Kehadiran</th>
+        <th style="background:#0d6efd;color:white;">No</th>
+        <th style="background:#0d6efd;color:white;">Nama</th>
+        <th style="background:#0d6efd;color:white;">Kehadiran</th>
       </tr>
   `;
 
@@ -475,23 +496,24 @@ function exportPDF(){
   // 🔥 tampilkan dulu
   element.style.display = "block";
 
-  // 🔥 FIX PENTING: kasih delay render
+  // 🔥 FIX PENTING: delay render + config page
   setTimeout(() => {
 
-    html2pdf()
-      .set({
-        margin: 10,
-        filename: 'laporan_kehadiran.pdf',
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      })
-      .from(element)
-      .save()
-      .then(() => {
-        element.style.display = "none";
-      });
+    html2pdf().set({
+      margin: 10,
+      filename: 'laporan_kehadiran.pdf',
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] } // 🔥 ini kunci
+    })
+    .from(element)
+    .save()
+    .then(() => {
+      element.style.display = "none";
+    });
 
-  }, 500); // 🔥 ini kunci sukses
+  }, 800); // 🔥 delay lebih lama
 }
 </script>
   
