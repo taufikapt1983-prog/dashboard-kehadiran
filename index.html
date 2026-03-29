@@ -196,7 +196,6 @@ th:nth-child(3){
   <div id="pagination" style="text-align:center; margin-top:10px;"></div>
 </div>
 
-<div id="pdfContent" style="display:none; padding:20px; font-family:Arial;">
 <img src="https://i.ibb.co.com/5WWKSY0Z/Logo-IAI-Grobogan-b.png" style="width:60px; display:block; margin:auto;">
   <h2 style="text-align:center; margin-bottom:0;">
   IKATAN APOTEKER INDONESIA
@@ -478,67 +477,82 @@ function exportPDF(){
     return cocokNama && cocokStatus;
   });
 
-  // 🔥 tanggal
-  let now = new Date();
-  document.querySelectorAll("#tanggalCetak").forEach(el=>{
-    el.innerText = now.toLocaleDateString("id-ID");
-  });
+  let now = new Date().toLocaleDateString("id-ID");
 
-  // 🔥 summary
-  let hadir = filtered.filter(x => x.kehadiran === "Hadir").length;
-  let tidak = filtered.filter(x => x.kehadiran === "Tidak Hadir").length;
+  // 🔥 BANGUN HTML PDF MANUAL (INI KUNCI STABIL)
+  let html = `
+  <div style="font-family:Arial; padding:20px;">
 
-  document.getElementById("pdfTotal").innerText = filtered.length;
-  document.getElementById("pdfHadir").innerText = hadir;
-  document.getElementById("pdfTidak").innerText = tidak;
+    <div style="text-align:center;">
+      <img src="https://i.ibb.co.com/5WWKSY0Z/Logo-IAI-Grobogan-b.png" width="60">
+      <h2 style="margin:5px 0;">IKATAN APOTEKER INDONESIA</h2>
+      <h3 style="margin:0;">LAPORAN KEHADIRAN</h3>
+      <p>Dicetak: ${now}</p>
+    </div>
 
-  // 🔥 isi tabel (FULL DATA, TIDAK KE POTONG)
-  let html = "";
+    <hr>
+
+    <p><b>Total:</b> ${filtered.length}</p>
+    <p><b>Hadir:</b> ${filtered.filter(x=>x.kehadiran==="Hadir").length}</p>
+    <p><b>Tidak Hadir:</b> ${filtered.filter(x=>x.kehadiran==="Tidak Hadir").length}</p>
+
+    <br>
+
+    <table border="1" width="100%" cellspacing="0" cellpadding="6" style="border-collapse:collapse;">
+      <thead>
+        <tr style="background:#0d6efd; color:white;">
+          <th>No</th>
+          <th>Nama</th>
+          <th>Kehadiran</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
   filtered.forEach((d,i)=>{
     html += `
-      <tr style="page-break-inside: avoid;">
-        <td>${i+1}</td>
+      <tr>
+        <td style="text-align:center;">${i+1}</td>
         <td>${d.nama}</td>
-        <td style="color:${d.kehadiran==='Hadir'?'green':'red'}">
+        <td style="text-align:center; color:${d.kehadiran==='Hadir'?'green':'red'};">
           ${d.kehadiran}
         </td>
       </tr>
     `;
   });
 
-  document.getElementById("pdfTable").innerHTML = html;
+  html += `
+      </tbody>
+    </table>
 
-  let element = document.getElementById("pdfContent");
+    <div style="text-align:right; margin-top:40px;">
+      <p>Grobogan, ${now}</p>
+      <br><br><br>
+      <p><b>( Ketua Panitia )</b></p>
+    </div>
 
-  element.style.display = "block";
+  </div>
+  `;
 
-  setTimeout(() => {
+  // 🔥 buat element sementara (bukan pakai pdfContent lagi)
+  let element = document.createElement("div");
+  element.innerHTML = html;
 
-    html2pdf().set({
-      margin: [10,10,10,10],
-      filename: 'laporan_kehadiran.pdf',
-      image: { type: 'jpeg', quality: 1 },
-      html2canvas: { 
-        scale: 2,
-        useCORS: true,
-        scrollY: 0
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait' 
-      },
-      pagebreak: { 
-        mode: ['avoid-all','css','legacy'] 
-      }
-    })
-    .from(element)
-    .save()
-    .then(() => {
-      element.style.display = "none";
-    });
+  document.body.appendChild(element);
 
-  }, 1000); // 🔥 delay lebih panjang
+  html2pdf().set({
+    margin: 10,
+    filename: 'laporan_kehadiran.pdf',
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  })
+  .from(element)
+  .save()
+  .then(()=>{
+    document.body.removeChild(element);
+  });
+
 }
 </script>
   
