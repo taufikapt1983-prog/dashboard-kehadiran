@@ -128,6 +128,20 @@ th:nth-child(3){
     display: table-header-group;
   }
 }
+
+#pdfContent table {
+  page-break-inside: auto;
+}
+
+#pdfContent tr {
+  page-break-inside: avoid;
+  page-break-after: auto;
+}
+
+#pdfContent thead {
+  display: table-header-group;
+}
+  
 </style>
 </head>
 
@@ -183,13 +197,13 @@ th:nth-child(3){
 </div>
 
 <div id="pdfContent" style="display:none; padding:20px; font-family:Arial;">
-
-<h2 style="text-align:center; margin-bottom:0;">
+<img src="https://i.ibb.co.com/5WWKSY0Z/Logo-IAI-Grobogan-b.png" style="width:60px; display:block; margin:auto;">
+  <h2 style="text-align:center; margin-bottom:0;">
   IKATAN APOTEKER INDONESIA
-</h2>
-<h3 style="text-align:center; margin-top:5px;">
+  </h2>
+  <h3 style="text-align:center; margin-top:5px;">
   LAPORAN KEHADIRAN
-</h3>
+  </h3>
 
   <p style="text-align:center;">
     Dicetak: <span id="tanggalCetak"></span>
@@ -213,7 +227,7 @@ th:nth-child(3){
     </thead>
     <tbody id="pdfTable"></tbody>
   </table>
-      <div style="text-align:right; margin-top:20px;">
+      <div style="text-align:right; margin-top:30px; page-break-inside:avoid;">
       <p>Grobogan, <span id="tanggalCetak"></span></p>
       <br><br><br>
       <p><b>( Ketua Panitia )</b></p>
@@ -466,8 +480,9 @@ function exportPDF(){
 
   // 🔥 tanggal
   let now = new Date();
-  document.getElementById("tanggalCetak").innerText =
-    now.toLocaleDateString("id-ID");
+  document.querySelectorAll("#tanggalCetak").forEach(el=>{
+    el.innerText = now.toLocaleDateString("id-ID");
+  });
 
   // 🔥 summary
   let hadir = filtered.filter(x => x.kehadiran === "Hadir").length;
@@ -477,14 +492,16 @@ function exportPDF(){
   document.getElementById("pdfHadir").innerText = hadir;
   document.getElementById("pdfTidak").innerText = tidak;
 
-  // 🔥 isi tabel
+  // 🔥 isi tabel (FULL DATA, TIDAK KE POTONG)
   let html = "";
   filtered.forEach((d,i)=>{
     html += `
-      <tr>
+      <tr style="page-break-inside: avoid;">
         <td>${i+1}</td>
         <td>${d.nama}</td>
-        <td>${d.kehadiran}</td>
+        <td style="color:${d.kehadiran==='Hadir'?'green':'red'}">
+          ${d.kehadiran}
+        </td>
       </tr>
     `;
   });
@@ -493,19 +510,27 @@ function exportPDF(){
 
   let element = document.getElementById("pdfContent");
 
-  // 🔥 tampilkan dulu
   element.style.display = "block";
 
-  // 🔥 FIX PENTING: delay render + config page
   setTimeout(() => {
 
     html2pdf().set({
-      margin: 10,
+      margin: [10,10,10,10],
       filename: 'laporan_kehadiran.pdf',
       image: { type: 'jpeg', quality: 1 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'] } // 🔥 ini kunci
+      html2canvas: { 
+        scale: 2,
+        useCORS: true,
+        scrollY: 0
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait' 
+      },
+      pagebreak: { 
+        mode: ['avoid-all','css','legacy'] 
+      }
     })
     .from(element)
     .save()
@@ -513,7 +538,7 @@ function exportPDF(){
       element.style.display = "none";
     });
 
-  }, 800); // 🔥 delay lebih lama
+  }, 1000); // 🔥 delay lebih panjang
 }
 </script>
   
