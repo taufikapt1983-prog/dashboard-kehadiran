@@ -128,7 +128,29 @@ th:nth-child(3){
     display: table-header-group;
   }
 }
-  
+
+  #pdfContent table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#pdfContent th, 
+#pdfContent td {
+  border: 1px solid #333;
+  padding: 6px;
+}
+
+#pdfContent tr {
+  page-break-inside: avoid;
+}
+
+#pdfContent thead {
+  display: table-header-group;
+}
+
+#pdfContent tfoot {
+  display: table-footer-group;
+}
 </style>
 </head>
 
@@ -463,7 +485,10 @@ function exportPDF(){
 
   let now = new Date().toLocaleDateString("id-ID");
 
-  document.getElementById("tanggalCetak").innerText = now;
+  document.querySelectorAll("#tanggalCetak").forEach(el=>{
+    el.innerText = now;
+  });
+
   document.getElementById("pdfTotal").innerText = filtered.length;
   document.getElementById("pdfHadir").innerText = filtered.filter(x=>x.kehadiran==="Hadir").length;
   document.getElementById("pdfTidak").innerText = filtered.filter(x=>x.kehadiran==="Tidak Hadir").length;
@@ -488,10 +513,19 @@ function exportPDF(){
   element.style.display = "block";
 
   html2pdf().set({
-    margin: 10,
+    margin: [5,10,10,10], // 🔥 atas kecil biar tidak kosong
     filename: 'laporan_kehadiran.pdf',
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { 
+      scale: 2,
+      scrollY: 0
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait' 
+    },
+    pagebreak: { mode: ['css', 'legacy'] } // 🔥 WAJIB
   })
   .from(element)
   .save()
