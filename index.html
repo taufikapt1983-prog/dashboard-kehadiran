@@ -485,65 +485,53 @@ function exportPDF(){
 
   let now = new Date().toLocaleDateString("id-ID");
 
-  let rows = "";
+  document.querySelectorAll("#tanggalCetak").forEach(el=>{
+    el.innerText = now;
+  });
+
+  document.getElementById("pdfTotal").innerText = filtered.length;
+  document.getElementById("pdfHadir").innerText = filtered.filter(x=>x.kehadiran==="Hadir").length;
+  document.getElementById("pdfTidak").innerText = filtered.filter(x=>x.kehadiran==="Tidak Hadir").length;
+
+  let html = "";
 
   filtered.forEach((d,i)=>{
-    rows += `
-      <div style="display:flex; border-bottom:1px solid #ccc; padding:6px 0;">
-        <div style="width:10%; text-align:center;">${i+1}</div>
-        <div style="width:60%;">${d.nama}</div>
-        <div style="width:30%; text-align:center; color:${d.kehadiran==='Hadir'?'green':'red'};">
+    html += `
+      <tr>
+        <td style="text-align:center;">${i+1}</td>
+        <td>${d.nama}</td>
+        <td style="text-align:center; color:${d.kehadiran==='Hadir'?'green':'red'};">
           ${d.kehadiran}
-        </div>
-      </div>
+        </td>
+      </tr>
     `;
   });
 
-  let content = `
-    <div style="font-family:Arial; padding:20px;">
+  document.getElementById("pdfTable").innerHTML = html;
 
-      <div style="text-align:center;">
-        <img src="https://i.ibb.co.com/5WWKSY0Z/Logo-IAI-Grobogan-b.png" width="70">
-        <h2 style="margin:5px 0;">IKATAN APOTEKER INDONESIA</h2>
-        <h3 style="margin:0;">LAPORAN KEHADIRAN</h3>
-        <p>Dicetak: ${now}</p>
-      </div>
-
-      <hr>
-
-      <p><b>Total:</b> ${filtered.length}</p>
-      <p><b>Hadir:</b> ${filtered.filter(x=>x.kehadiran==="Hadir").length}</p>
-      <p><b>Tidak Hadir:</b> ${filtered.filter(x=>x.kehadiran==="Tidak Hadir").length}</p>
-
-      <br>
-
-      <!-- HEADER -->
-      <div style="display:flex; background:#0d6efd; color:white; padding:8px 0; font-weight:bold;">
-        <div style="width:10%; text-align:center;">No</div>
-        <div style="width:60%;">Nama</div>
-        <div style="width:30%; text-align:center;">Kehadiran</div>
-      </div>
-
-      ${rows}
-
-      <!-- TANDA TANGAN -->
-      <div style="margin-top:60px; text-align:right;">
-        <p>Grobogan, ${now}</p>
-        <br><br><br>
-        <p><b>( Ketua Panitia )</b></p>
-      </div>
-
-    </div>
-  `;
+  let element = document.getElementById("pdfContent");
+  element.style.display = "block";
 
   html2pdf().set({
-    margin: 10,
+    margin: [5,10,10,10], // 🔥 atas kecil biar tidak kosong
     filename: 'laporan_kehadiran.pdf',
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: { 
+      scale: 2,
+      scrollY: 0
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait' 
+    },
+    pagebreak: { mode: ['css', 'legacy'] } // 🔥 WAJIB
   })
-  .from(content)
-  .save();
+  .from(element)
+  .save()
+  .then(()=>{
+    element.style.display = "none";
+  });
 
 }
 </script>
